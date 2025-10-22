@@ -11,27 +11,38 @@ echo "==============================================="
 # Step 0: Verify shared storage accessibility
 echo "0️⃣ Verifying shared storage accessibility..."
 docker compose -f docker-compose.zerops.yaml run --rm configurator bash -c '
-    echo "   Testing shared storage mount..."
+    echo "   Testing shared storage mount for full bench..."
     
-    # Check if the sites directory is accessible
-    if [ -d "/home/frappe/frappe-bench/sites" ]; then
-        echo "✅ Shared storage directory accessible: /home/frappe/frappe-bench/sites"
+    # Check if the bench directory is accessible
+    if [ -d "/home/frappe/frappe-bench" ]; then
+        echo "✅ Shared storage bench directory accessible: /home/frappe/frappe-bench"
         
-        # Test write permissions
-        if touch /home/frappe/frappe-bench/sites/.storage-test 2>/dev/null; then
+        # Test write permissions in bench root
+        if touch /home/frappe/frappe-bench/.storage-test 2>/dev/null; then
             echo "✅ Shared storage is writable"
-            rm -f /home/frappe/frappe-bench/sites/.storage-test
+            rm -f /home/frappe/frappe-bench/.storage-test
         else
             echo "❌ Shared storage is not writable!"
             exit 1
         fi
         
+        # Check essential subdirectories
+        for dir in sites apps logs config; do
+            if [ -d "/home/frappe/frappe-bench/$dir" ]; then
+                echo "✅ Essential directory exists: $dir"
+            else
+                echo "⚠️ Essential directory missing: $dir (will be created)"
+            fi
+        done
+        
         # Show storage info
         echo "📂 Storage info:"
-        df -h /home/frappe/frappe-bench/sites | tail -1
+        df -h /home/frappe/frappe-bench | tail -1
+        echo "📋 Bench structure:"
+        ls -la /home/frappe/frappe-bench/
     else
-        echo "❌ Shared storage directory not accessible!"
-        echo "Expected: /home/frappe/frappe-bench/sites"
+        echo "❌ Shared storage bench directory not accessible!"
+        echo "Expected: /home/frappe/frappe-bench"
         exit 1
     fi
 '
@@ -109,11 +120,11 @@ docker compose -f docker-compose.zerops.yaml run --rm \
     echo ""
     
     echo "🎯 All service connections verified successfully!"
-    echo "   ✅ Storage: /home/frappe/frappe-bench/sites (writable)"
+    echo "   ✅ Storage: /home/frappe/frappe-bench (full bench - writable)"
     echo "   ✅ MariaDB: $DB_HOST:$DB_PORT"
     echo "   ✅ Redis Cache: rediscache:6379"
     echo "   ✅ Redis Queue: redisqueue:6379"
 '
 
-echo "✅ All Zerops managed services and storage are ready!"
+echo "✅ All Zerops managed services and full bench storage are ready!"
 echo ""

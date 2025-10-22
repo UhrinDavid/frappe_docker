@@ -117,16 +117,33 @@ docker compose -f docker-compose.zerops.yaml run --rm \
 echo ""
 echo "4️⃣ Final persistence verification..."
 docker compose -f docker-compose.zerops.yaml run --rm configurator bash -c '
-  echo "📁 Shared storage contents:"
+  echo "📁 Full bench shared storage verification:"
+  echo "📂 Bench directory contents:"
+  ls -la /home/frappe/frappe-bench/
+  echo ""
+  echo "📂 Sites directory contents:"
   ls -la /home/frappe/frappe-bench/sites/
   echo ""
+  echo "📦 Apps directory contents:"
+  ls -la /home/frappe/frappe-bench/apps/ 2>/dev/null || echo "Apps directory empty or not initialized yet"
+  echo ""
+  
+  # Check site existence
   if [ -d "/home/frappe/frappe-bench/sites/'$SITE_NAME'" ]; then
-    echo "✅ Site '\''$SITE_NAME'\'' found in container sites directory"
+    echo "✅ Site '\''$SITE_NAME'\'' found in shared storage"
     echo "📁 Site directory size: $(du -sh /home/frappe/frappe-bench/sites/'$SITE_NAME' | cut -f1)"
   else
-    echo "❌ Site '\''$SITE_NAME'\'' NOT found in container sites directory!"
+    echo "❌ Site '\''$SITE_NAME'\'' NOT found in shared storage!"
     echo "This means the site will not be available to running containers"
     exit 1
+  fi
+  
+  # Check apps.txt existence
+  if [ -f "/home/frappe/frappe-bench/sites/apps.txt" ]; then
+    echo "✅ apps.txt found in shared storage"
+    echo "📋 Apps list: $(cat /home/frappe/frappe-bench/sites/apps.txt | tr '\n' ' ')"
+  else
+    echo "⚠️ apps.txt not found (may be created during first run)"
   fi
 '
 
@@ -136,6 +153,7 @@ echo "======================================================="
 echo "✅ Site: $SITE_NAME"
 echo "✅ Apps: frappe, erpnext, erpnext_xml_importer"  
 echo "✅ Configuration: accessible"
-echo "✅ Storage: persistent"
+echo "✅ Storage: full bench persistence enabled"
+echo "✅ Apps Directory: persisted in shared storage"
 echo ""
 echo "🚀 Site is ready for deployment!"

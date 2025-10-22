@@ -17,7 +17,7 @@ x-depends-on-configurator: &depends_on_configurator
 x-backend-defaults: &backend_defaults
   <<: [*depends_on_configurator, *customizable_image]
   volumes:
-    - /mnt/sharedstorage/sites:/home/frappe/frappe-bench/sites
+    - /mnt/sharedstorage/frappe-bench:/home/frappe/frappe-bench
   environment:
     - DB_HOST
     - DB_PORT
@@ -79,7 +79,7 @@ services:
       - PROXY_READ_TIMEOUT=120
       - CLIENT_MAX_BODY_SIZE=50m
     volumes:
-      - /mnt/sharedstorage/sites:/home/frappe/frappe-bench/sites
+      - /mnt/sharedstorage/frappe-bench:/home/frappe/frappe-bench
     depends_on:
       - backend
       - websocket
@@ -93,7 +93,7 @@ services:
       - node
       - /home/frappe/frappe-bench/apps/frappe/socketio.js
     volumes:
-      - /mnt/sharedstorage/sites:/home/frappe/frappe-bench/sites
+      - /mnt/sharedstorage/frappe-bench:/home/frappe/frappe-bench
     ports:
       - "9000:9000"
 
