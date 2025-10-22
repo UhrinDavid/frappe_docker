@@ -68,19 +68,29 @@ zerops:
         # Pull Docker images
         - docker compose -f docker-compose.zerops.yaml pull
         
-        # Install Frappe site and apps using dedicated script
+        # Step 1: Prepare shared storage
         - |
-          echo "🚀 Running site installation..."
-          chmod +x scripts/install-site.sh
-          ./scripts/install-site.sh
-          echo "✅ Site installation completed"
+          echo "📁 STEP 1: Shared Storage Preparation"
+          chmod +x scripts/prepare-storage.sh
+          ./scripts/prepare-storage.sh
         
-        # Install Frappe site and apps using dedicated script
+        # Step 2: Check service connections
         - |
-          echo "🚀 Running site installation..."
-          chmod +x scripts/install-site.sh
-          ./scripts/install-site.sh
-          echo "✅ Site installation completed"
+          echo "� STEP 2: Service Connection Validation"
+          chmod +x scripts/check-services.sh
+          ./scripts/check-services.sh
+        
+        # Step 3: Install Frappe site and apps (idempotent)
+        - |
+          echo "🏗️ STEP 3: Frappe Site Installation (idempotent)"
+          chmod +x scripts/install-frappe.sh
+          ./scripts/install-frappe.sh
+        
+        # Step 4: Post-installation verification
+        - |
+          echo "✅ STEP 4: Post-Installation Verification"
+          chmod +x scripts/post-install-check.sh
+          ./scripts/post-install-check.sh
       
       # Start all application services
       start: docker compose -f docker-compose.zerops.yaml up --force-recreate
@@ -98,17 +108,25 @@ zerops:
 # This configuration provides:
 # ✅ Managed MariaDB service with automatic backups and scaling
 # ✅ Dedicated Redis services for cache and queue (better performance)
+# ✅ Shared storage service for persistent data across deployments
 # ✅ Docker Compose for Frappe containers only (simpler, faster)
+# ✅ Modular installation process with dedicated scripts for each step
 # ✅ Automatic site initialization with custom apps
-# ✅ Persistent storage managed by Zerops
 # ✅ Service health monitoring and auto-restart
 # ✅ Built-in service discovery (services connect by name)
 #
 # Architecture:
-# - db: Managed MariaDB 11 service (default Zerops configuration)
-# - redis-cache: Managed Valkey 7.2 service (default configuration, NON_HA mode)  
-# - redis-queue: Managed Valkey 7.2 service (default configuration, NON_HA mode)
-# - app: Docker Compose with Frappe containers (backend, frontend, websocket, workers, scheduler)
+# - mariadb: Managed MariaDB 10.6 service (NON_HA mode)
+# - rediscache: Managed Valkey 7.2 service (NON_HA mode)  
+# - redisqueue: Managed Valkey 7.2 service (NON_HA mode)
+# - sharedstorage: Managed shared storage for persistent site data
+# - erpnext: Docker Compose with Frappe containers (backend, frontend, websocket, workers, scheduler)
+#
+# Installation Process (Modular Scripts):
+# 1. prepare-storage.sh - Sets up shared storage with proper permissions
+# 2. check-services.sh - Validates all service connections (DB, Redis, Storage)
+# 3. install-frappe.sh - Creates site and installs ERPNext + custom apps
+# 4. post-install-check.sh - Verifies installation success and data persistence
 #
 # Benefits of managed services:
 # - Automatic backups and point-in-time recovery

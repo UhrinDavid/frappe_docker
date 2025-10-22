@@ -1,66 +1,128 @@
-#!/bin/bash
+#!/bin/bash#!/bin/bash
 
-# Frappe/ERPNext Site Installation Script
-# This script creates and configures a new Frappe site with ERPNext and custom apps
+
+
+# Main Frappe/ERPNext Site Installation Orchestrator# Frappe/ERPNext Site Installation Script
+
+# Coordinates the complete site installation process using modular scripts# This script creates and configures a new Frappe site with ERPNext and custom apps
+
 # Runs during Zerops deployment before starting application services
 
 set -e
 
-echo "🚀 Starting Frappe site installation..."
+set -e
 
-# Step 1: Prepare shared storage using Docker container
+echo "🚀 Starting Frappe/ERPNext Installation Process"
+
+echo "=============================================="echo "🚀 Starting Frappe site installation..."
+
+echo "Timestamp: $(date)"
+
+echo ""# Step 1: Prepare shared storage using Docker container
+
 echo "📁 Preparing shared storage..."
-docker compose -f docker-compose.zerops.yaml run --rm configurator bash -c '
-  echo "Creating shared storage directory..."
-  mkdir -p /home/frappe/frappe-bench/sites
-  chmod 755 /home/frappe/frappe-bench/sites
-  echo "✅ Shared storage prepared at /home/frappe/frappe-bench/sites"
-'
 
-# Step 2: Check service connections using Docker container  
-echo "🔗 Checking service connections..."
+# Configuration from environment variables (no defaults - must be provided)docker compose -f docker-compose.zerops.yaml run --rm configurator bash -c '
+
+SITE_NAME=${FRAPPE_SITE_NAME_HEADER}  echo "Creating shared storage directory..."
+
+DB_PASSWORD=${DB_PASSWORD}  mkdir -p /home/frappe/frappe-bench/sites
+
+ADMIN_PASSWORD=${ADMIN_PASSWORD}  chmod 755 /home/frappe/frappe-bench/sites
+
+DB_HOST=${DB_HOST}  echo "✅ Shared storage prepared at /home/frappe/frappe-bench/sites"
+
+DB_PORT=${DB_PORT}'
+
+REDIS_CACHE=${REDIS_CACHE}
+
+REDIS_QUEUE=${REDIS_QUEUE}# Step 2: Check service connections using Docker container  
+
+SOCKETIO_PORT=${SOCKETIO_PORT}echo "🔗 Checking service connections..."
+
 docker compose -f docker-compose.zerops.yaml run --rm \
-  -e DB_HOST="$DB_HOST" \
-  -e DB_PORT="$DB_PORT" \
-  -e ROOT_USER="$ROOT_USER" \
-  -e DB_PASSWORD="$DB_PASSWORD" \
-  configurator bash -c '
-    echo "1️⃣ Checking database connection..."
+
+echo "📋 Installation Configuration:"  -e DB_HOST="$DB_HOST" \
+
+echo "  - Site Name: $SITE_NAME"  -e DB_PORT="$DB_PORT" \
+
+echo "  - Database Host: $DB_HOST:$DB_PORT"  -e ROOT_USER="$ROOT_USER" \
+
+echo "  - Redis Cache: $REDIS_CACHE"  -e DB_PASSWORD="$DB_PASSWORD" \
+
+echo "  - Redis Queue: $REDIS_QUEUE"  configurator bash -c '
+
+echo ""    echo "1️⃣ Checking database connection..."
+
     echo "   Host: $DB_HOST:$DB_PORT"
-    echo "   User: $ROOT_USER"
 
-    DB_ATTEMPTS=0
-    while [ $DB_ATTEMPTS -lt 10 ] && ! mariadb -h ${DB_HOST} -P ${DB_PORT} -u ${ROOT_USER} -p${DB_PASSWORD} -e "SELECT 1;" 2>/dev/null; do
-        DB_ATTEMPTS=$((DB_ATTEMPTS + 1))
+# Step 1: Prepare shared storage    echo "   User: $ROOT_USER"
+
+echo "STEP 1: Shared Storage Preparation"
+
+echo "=================================="    DB_ATTEMPTS=0
+
+chmod +x scripts/prepare-storage.sh    while [ $DB_ATTEMPTS -lt 10 ] && ! mariadb -h ${DB_HOST} -P ${DB_PORT} -u ${ROOT_USER} -p${DB_PASSWORD} -e "SELECT 1;" 2>/dev/null; do
+
+./scripts/prepare-storage.sh        DB_ATTEMPTS=$((DB_ATTEMPTS + 1))
+
         echo "   Database not ready (attempt $DB_ATTEMPTS/10), waiting 5 seconds..."
-        sleep 5
+
+# Step 2: Check service connections        sleep 5
+
+echo "STEP 2: Service Connection Validation"    done
+
+echo "===================================="
+
+chmod +x scripts/check-services.sh    if [ $DB_ATTEMPTS -ge 10 ]; then
+
+./scripts/check-services.sh        echo "❌ Database connection failed after 10 attempts"
+
+        exit 1
+
+# Step 3: Install Frappe site and apps    fi
+
+echo "STEP 3: Frappe Site Installation"    echo "✅ Database connection established"
+
+echo "==============================="
+
+chmod +x scripts/install-frappe.sh    echo "2️⃣ Checking Redis cache connection..."
+
+./scripts/install-frappe.sh    echo "   Host: rediscache:6379"
+
+
+
+# Step 4: Post-installation verification    REDIS_CACHE_ATTEMPTS=0
+
+echo "STEP 4: Post-Installation Verification"    while [ $REDIS_CACHE_ATTEMPTS -lt 10 ] && ! redis-cli -h rediscache -p 6379 ping 2>/dev/null; do
+
+echo "====================================="        REDIS_CACHE_ATTEMPTS=$((REDIS_CACHE_ATTEMPTS + 1))
+
+chmod +x scripts/post-install-check.sh        echo "   Redis cache not ready (attempt $REDIS_CACHE_ATTEMPTS/10), waiting 5 seconds..."
+
+./scripts/post-install-check.sh        sleep 5
+
     done
 
-    if [ $DB_ATTEMPTS -ge 10 ]; then
-        echo "❌ Database connection failed after 10 attempts"
-        exit 1
-    fi
-    echo "✅ Database connection established"
+echo ""
 
-    echo "2️⃣ Checking Redis cache connection..."
-    echo "   Host: rediscache:6379"
+echo "🎯 INSTALLATION PROCESS COMPLETED SUCCESSFULLY!"    if [ $REDIS_CACHE_ATTEMPTS -ge 10 ]; then
 
-    REDIS_CACHE_ATTEMPTS=0
-    while [ $REDIS_CACHE_ATTEMPTS -lt 10 ] && ! redis-cli -h rediscache -p 6379 ping 2>/dev/null; do
-        REDIS_CACHE_ATTEMPTS=$((REDIS_CACHE_ATTEMPTS + 1))
-        echo "   Redis cache not ready (attempt $REDIS_CACHE_ATTEMPTS/10), waiting 5 seconds..."
-        sleep 5
-    done
+echo "=============================================="        echo "❌ Redis cache connection failed after 10 attempts"
 
-    if [ $REDIS_CACHE_ATTEMPTS -ge 10 ]; then
-        echo "❌ Redis cache connection failed after 10 attempts"
-        exit 1
-    fi
-    echo "✅ Redis cache connection established"
+echo "✅ Shared storage prepared"        exit 1
 
-    echo "3️⃣ Checking Redis queue connection..."
-    echo "   Host: redisqueue:6379"
+echo "✅ Service connections verified"    fi
 
+echo "✅ Frappe site installed"    echo "✅ Redis cache connection established"
+
+echo "✅ Post-installation checks passed"
+
+echo ""    echo "3️⃣ Checking Redis queue connection..."
+
+echo "🚀 Site '$SITE_NAME' is ready for deployment!"    echo "   Host: redisqueue:6379"
+
+echo "Timestamp: $(date)"
     REDIS_QUEUE_ATTEMPTS=0
     while [ $REDIS_QUEUE_ATTEMPTS -lt 10 ] && ! redis-cli -h redisqueue -p 6379 ping 2>/dev/null; do
         REDIS_QUEUE_ATTEMPTS=$((REDIS_QUEUE_ATTEMPTS + 1))
