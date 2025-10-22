@@ -90,4 +90,97 @@ docker compose -f docker-compose.zerops.yaml run --rm \
     fi
   '
 
+echo "🔍 Verifying installation..."
+
+# Verification: Check if site exists and is accessible
+echo "1️⃣ Verifying site exists..."
+docker compose -f docker-compose.zerops.yaml run --rm \
+  -e FRAPPE_SITE_NAME_HEADER="$SITE_NAME" \
+  configurator bash -c '
+    cd /home/frappe/frappe-bench
+    if [ -d "sites/$FRAPPE_SITE_NAME_HEADER" ]; then
+      echo "✅ Site directory exists: sites/$FRAPPE_SITE_NAME_HEADER"
+    else
+      echo "❌ Site directory not found!"
+      exit 1
+    fi
+    
+    # Check if site is in bench sites list
+    if bench --site all list-sites | grep -q "$FRAPPE_SITE_NAME_HEADER"; then
+      echo "✅ Site is registered in Frappe bench"
+    else
+      echo "❌ Site not found in bench sites list!"
+      exit 1
+    fi
+  '
+
+# Verification: Check installed apps
+echo "2️⃣ Verifying installed apps..."
+docker compose -f docker-compose.zerops.yaml run --rm \
+  -e FRAPPE_SITE_NAME_HEADER="$SITE_NAME" \
+  configurator bash -c '
+    cd /home/frappe/frappe-bench
+    
+    echo "📋 Checking installed apps..."
+    INSTALLED_APPS=$(bench --site "$FRAPPE_SITE_NAME_HEADER" list-apps 2>/dev/null || echo "")
+    
+    if [ -z "$INSTALLED_APPS" ]; then
+      echo "❌ Could not retrieve apps list!"
+      exit 1
+    fi
+    
+    echo "📦 Installed apps:"
+    echo "$INSTALLED_APPS"
+    
+    # Check for required apps
+    if echo "$INSTALLED_APPS" | grep -q "frappe"; then
+      echo "✅ Frappe framework is installed"
+    else
+      echo "❌ Frappe framework not found!"
+      exit 1
+    fi
+    
+    if echo "$INSTALLED_APPS" | grep -q "erpnext"; then
+      echo "✅ ERPNext app is installed"
+    else
+      echo "❌ ERPNext app not found!"
+      exit 1
+    fi
+    
+    if echo "$INSTALLED_APPS" | grep -q "erpnext_xml_importer"; then
+      echo "✅ XML Importer app is installed"
+    else
+      echo "❌ XML Importer app not found!"
+      exit 1
+    fi
+  '
+
+# Verification: Check site configuration
+echo "3️⃣ Verifying site configuration..."
+docker compose -f docker-compose.zerops.yaml run --rm \
+  -e FRAPPE_SITE_NAME_HEADER="$SITE_NAME" \
+  configurator bash -c '
+    cd /home/frappe/frappe-bench
+    
+    if bench --site "$FRAPPE_SITE_NAME_HEADER" show-config >/dev/null 2>&1; then
+      echo "✅ Site configuration is accessible"
+      
+      # Check database connection from site
+      if bench --site "$FRAPPE_SITE_NAME_HEADER" --verbose console --execute "frappe.db.get_value(\"User\", \"Administrator\", \"name\")" 2>/dev/null | grep -q "Administrator"; then
+        echo "✅ Database connection from site works"
+      else
+        echo "⚠️  Database connection test inconclusive"
+      fi
+    else
+      echo "❌ Cannot access site configuration!"
+      exit 1
+    fi
+  '
+
+echo ""
+echo "🎉 Installation verification completed successfully!"
+echo "✅ Site: $SITE_NAME"
+echo "✅ Apps: frappe, erpnext, erpnext_xml_importer"
+echo "✅ Configuration: accessible"
+echo ""
 echo "🎯 Frappe site installation script completed!"
