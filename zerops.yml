@@ -41,8 +41,8 @@ zerops:
         DB_PASSWORD: ${dbPassword}
         
         # Redis connections (using Zerops Valkey services)  
-        REDIS_CACHE: redis-cache:6379
-        REDIS_QUEUE: redis-queue:6379
+        REDIS_CACHE: rediscache:6379
+        REDIS_QUEUE: redisqueue:6379
         
         # Site configuration
         FRAPPE_SITE_NAME_HEADER: ${siteName}
