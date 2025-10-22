@@ -40,14 +40,14 @@ zerops:
         # Fix docker socket permissions
         - sudo chmod 666 /var/run/docker.sock
         # Build and push to Docker Hub using Git commit SHA
-        - export GIT_SHA=$(git rev-parse --short HEAD)
-        - echo "Building with Git SHA: $GIT_SHA"
-        - docker build -f images/herbatica/erpnext/Containerfile -t davidu98/herbatica-erpnext:$GIT_SHA .
-        - docker tag davidu98/herbatica-erpnext:$GIT_SHA davidu98/herbatica-erpnext:latest
-        # Login and push to Docker Hub
-        - echo $DOCKERHUB_TOKEN | docker login -u davidu98 --password-stdin
-        - docker push davidu98/herbatica-erpnext:$GIT_SHA
-        - docker push davidu98/herbatica-erpnext:latest
+        - |
+          export GIT_SHA=$(git rev-parse --short HEAD)
+          echo "Building with Git SHA: $GIT_SHA"
+          docker build -f images/herbatica/erpnext/Containerfile -t davidu98/herbatica-erpnext:$GIT_SHA .
+          docker tag davidu98/herbatica-erpnext:$GIT_SHA davidu98/herbatica-erpnext:latest
+          echo $DOCKERHUB_TOKEN | docker login -u davidu98 --password-stdin
+          docker push davidu98/herbatica-erpnext:$GIT_SHA
+          docker push davidu98/herbatica-erpnext:latest
       deployFiles: 
         - ./docker-compose.zerops.yaml
         - ./scripts/
@@ -73,15 +73,15 @@ zerops:
         ROOT_USER: ${mariadb_user}
         DB_PASSWORD: ${mariadb_password}
 
-        # Redis connections (using Zerops Valkey services)
+        # Redis connection (using Zerops services) 
         REDIS_CACHE: rediscache:6379
         REDIS_QUEUE: redisqueue:6379
 
         # Site configuration
         FRAPPE_SITE_NAME_HEADER: ${siteName}
         ADMIN_PASSWORD: ${adminPassword}
-        
-        # Frontend/Nginx configuration
+
+        # Nginx/Proxy settings
         UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
         UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
         UPSTREAM_REAL_IP_RECURSIVE: "off"
@@ -101,7 +101,7 @@ zerops:
         
         # Step 2: Check service connections
         - |
-          echo "� STEP 2: Service Connection Validation"
+          echo "🔍 STEP 2: Service Connection Validation"
           chmod +x scripts/check-services.sh
           ./scripts/check-services.sh
         
@@ -116,37 +116,15 @@ zerops:
           echo "✅ STEP 4: Post-Installation Verification"
           chmod +x scripts/post-install-check.sh
           ./scripts/post-install-check.sh
-      
-      # Start all application services
-      start: docker compose -f docker-compose.zerops.yaml up --force-recreate
-      
-      # Expose the frontend port
+
+      # Expose HTTP port
       ports:
         - port: 8080
           httpSupport: true
 
-# Required secrets in Zerops dashboard:
-# - dbPassword: Database password for MariaDB (e.g., "mySecureDbPassword123")
-# - adminPassword: ERPNext admin user password (e.g., "myAdminPassword123")
-# - siteName: Your site domain name (e.g., "mycompany.example.com")
-#
-# This configuration provides:
-# ✅ Managed MariaDB service with automatic backups and scaling
-# ✅ Dedicated Redis services for cache and queue (better performance)
-# ✅ Shared storage service for persistent data across deployments
-# ✅ Docker Compose for Frappe containers only (simpler, faster)
-# ✅ Modular installation process with dedicated scripts for each step
-# ✅ Automatic site initialization with custom apps
-# ✅ Service health monitoring and auto-restart
-# ✅ Built-in service discovery (services connect by name)
-#
-# Architecture:
-# - mariadb: Managed MariaDB 10.6 service (NON_HA mode)
-# - rediscache: Managed Valkey 7.2 service (NON_HA mode)  
-# - redisqueue: Managed Valkey 7.2 service (NON_HA mode)
-# - sharedstorage: Managed shared storage for persistent site data
-# - erpnext: Docker Compose with Frappe containers (backend, frontend, websocket, workers, scheduler)
-#
+      # Start the application stack
+      start: docker compose -f docker-compose.zerops.yaml up --force-recreate
+
 # Installation Process (Modular Scripts):
 # 1. prepare-storage.sh - Sets up shared storage with proper permissions
 # 2. check-services.sh - Validates all service connections (DB, Redis, Storage)
