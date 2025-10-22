@@ -39,12 +39,13 @@ zerops:
         - sleep 5
         # Fix docker socket permissions
         - sudo chmod 666 /var/run/docker.sock
-        # Build and push to Docker Hub
-        - docker build -f images/herbatica/erpnext/Containerfile -t davidu98/herbatica-erpnext:${ZEROPS_SUBDOMAIN_PORT} .
-        - docker tag davidu98/herbatica-erpnext:${ZEROPS_SUBDOMAIN_PORT} davidu98/herbatica-erpnext:latest
+        # Build and push to Docker Hub (use timestamp as fallback for tag)
+        - export BUILD_TAG=${ZEROPS_SUBDOMAIN_PORT:-$(date +%Y%m%d-%H%M%S)}
+        - docker build -f images/herbatica/erpnext/Containerfile -t davidu98/herbatica-erpnext:$BUILD_TAG .
+        - docker tag davidu98/herbatica-erpnext:$BUILD_TAG davidu98/herbatica-erpnext:latest
         # Login and push to Docker Hub
         - echo $DOCKERHUB_TOKEN | docker login -u davidu98 --password-stdin
-        - docker push davidu98/herbatica-erpnext:${ZEROPS_SUBDOMAIN_PORT}
+        - docker push davidu98/herbatica-erpnext:$BUILD_TAG
         - docker push davidu98/herbatica-erpnext:latest
       deployFiles: 
         - ./docker-compose.zerops.yaml
@@ -57,7 +58,7 @@ zerops:
       envVariables:
         # Image configuration  
         CUSTOM_IMAGE: davidu98/herbatica-erpnext
-        CUSTOM_TAG: ${ZEROPS_SUBDOMAIN_PORT}
+        CUSTOM_TAG: latest
         
         # Docker Hub authentication
         DOCKERHUB_TOKEN: ${DOCKERHUB_TOKEN}
