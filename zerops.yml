@@ -2,24 +2,25 @@
 # Creates managed database services and uses Docker Compose for application containers
 
 zerops:
+  # Deploy DB and redis manually.
   # MariaDB Database Service
-  - setup: db
-    base: mariadb@11
-    envSecrets:
-      MARIADB_ROOT_PASSWORD: ${dbPassword}
+  # - setup: db
+  #   base: mariadb@11
+  #   envSecrets:
+  #     MARIADB_ROOT_PASSWORD: ${dbPassword}
 
-  # Redis Cache Service (using Valkey - Redis compatible)
-  - setup: redis-cache
-    base: valkey@7.2
-    mode: NON_HA  # Use HA in production
+  # # Redis Cache Service (using Valkey - Redis compatible)
+  # - setup: redis-cache
+  #   base: valkey@7.2
+  #   mode: NON_HA  # Use HA in production
 
-  # Redis Queue Service (using Valkey - Redis compatible)  
-  - setup: redis-queue
-    base: valkey@7.2
-    mode: NON_HA  # Use HA in production
+  # # Redis Queue Service (using Valkey - Redis compatible)  
+  # - setup: redis-queue
+  #   base: valkey@7.2
+  #   mode: NON_HA  # Use HA in production
 
   # Frappe/ERPNext Application Services (Docker Compose)
-  - setup: app
+  - setup: erpnext
     build:
       # Deploy the custom docker-compose file to the runtime
       deployFiles: ./docker-compose.zerops.yaml
