@@ -24,10 +24,6 @@ zerops:
       # Deploy the custom docker-compose file to the runtime
       deployFiles: ./docker-compose.zerops.yaml
       addToRunPrepare: ./docker-compose.zerops.yaml
-      # Copy initialization scripts
-      deployFiles:
-        - ./docker-compose.zerops.yaml
-        - ./scripts/
     run:
       # Environment variables for Docker Compose services
       envVariables:
