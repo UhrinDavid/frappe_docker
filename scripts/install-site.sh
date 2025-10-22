@@ -8,11 +8,74 @@ set -e
 
 echo "🚀 Starting Frappe site installation..."
 
-# Ensure shared storage directory exists
+# Step 1: Prepare shared storage using Docker container
 echo "📁 Preparing shared storage..."
-mkdir -p /mnt/sharedstorage/sites
-chmod 755 /mnt/sharedstorage/sites
-echo "✅ Shared storage prepared: /mnt/sharedstorage/sites"
+docker compose -f docker-compose.zerops.yaml run --rm configurator bash -c '
+  echo "Creating shared storage directory..."
+  mkdir -p /home/frappe/frappe-bench/sites
+  chmod 755 /home/frappe/frappe-bench/sites
+  echo "✅ Shared storage prepared at /home/frappe/frappe-bench/sites"
+'
+
+# Step 2: Check service connections using Docker container  
+echo "🔗 Checking service connections..."
+docker compose -f docker-compose.zerops.yaml run --rm \
+  -e DB_HOST="$DB_HOST" \
+  -e DB_PORT="$DB_PORT" \
+  -e ROOT_USER="$ROOT_USER" \
+  -e DB_PASSWORD="$DB_PASSWORD" \
+  configurator bash -c '
+    echo "1️⃣ Checking database connection..."
+    echo "   Host: $DB_HOST:$DB_PORT"
+    echo "   User: $ROOT_USER"
+
+    DB_ATTEMPTS=0
+    while [ $DB_ATTEMPTS -lt 10 ] && ! mariadb -h ${DB_HOST} -P ${DB_PORT} -u ${ROOT_USER} -p${DB_PASSWORD} -e "SELECT 1;" 2>/dev/null; do
+        DB_ATTEMPTS=$((DB_ATTEMPTS + 1))
+        echo "   Database not ready (attempt $DB_ATTEMPTS/10), waiting 5 seconds..."
+        sleep 5
+    done
+
+    if [ $DB_ATTEMPTS -ge 10 ]; then
+        echo "❌ Database connection failed after 10 attempts"
+        exit 1
+    fi
+    echo "✅ Database connection established"
+
+    echo "2️⃣ Checking Redis cache connection..."
+    echo "   Host: rediscache:6379"
+
+    REDIS_CACHE_ATTEMPTS=0
+    while [ $REDIS_CACHE_ATTEMPTS -lt 10 ] && ! redis-cli -h rediscache -p 6379 ping 2>/dev/null; do
+        REDIS_CACHE_ATTEMPTS=$((REDIS_CACHE_ATTEMPTS + 1))
+        echo "   Redis cache not ready (attempt $REDIS_CACHE_ATTEMPTS/10), waiting 5 seconds..."
+        sleep 5
+    done
+
+    if [ $REDIS_CACHE_ATTEMPTS -ge 10 ]; then
+        echo "❌ Redis cache connection failed after 10 attempts"
+        exit 1
+    fi
+    echo "✅ Redis cache connection established"
+
+    echo "3️⃣ Checking Redis queue connection..."
+    echo "   Host: redisqueue:6379"
+
+    REDIS_QUEUE_ATTEMPTS=0
+    while [ $REDIS_QUEUE_ATTEMPTS -lt 10 ] && ! redis-cli -h redisqueue -p 6379 ping 2>/dev/null; do
+        REDIS_QUEUE_ATTEMPTS=$((REDIS_QUEUE_ATTEMPTS + 1))
+        echo "   Redis queue not ready (attempt $REDIS_QUEUE_ATTEMPTS/10), waiting 5 seconds..."
+        sleep 5
+    done
+
+    if [ $REDIS_QUEUE_ATTEMPTS -ge 10 ]; then
+        echo "❌ Redis queue connection failed after 10 attempts"
+        exit 1
+    fi
+    echo "✅ Redis queue connection established"
+    
+    echo "🎯 All service connections verified successfully!"
+'
 
 # Configuration from environment variables (no defaults - must be provided)
 SITE_NAME=${FRAPPE_SITE_NAME_HEADER}
@@ -193,19 +256,21 @@ echo ""
 # Final check: Verify site persists in the shared storage
 echo "4️⃣ Final persistence check..."
 echo "📂 Checking if site data is in shared storage..."
-echo "📁 Shared storage contents:"
-ls -la /mnt/sharedstorage/sites/
-echo ""
-if [ -d "/mnt/sharedstorage/sites/$SITE_NAME" ]; then
-  echo "✅ Site '$SITE_NAME' found in shared storage"
-  echo "📁 Site directory size:"
-  du -sh /mnt/sharedstorage/sites/$SITE_NAME
-  echo "📄 Site directory contents:"
-  ls -la /mnt/sharedstorage/sites/$SITE_NAME/
-else
-  echo "❌ Site '$SITE_NAME' NOT found in shared storage!"
-  echo "This means the site will not be available to running containers"
-fi
+docker compose -f docker-compose.zerops.yaml run --rm configurator bash -c '
+  echo "📁 Shared storage contents:"
+  ls -la /home/frappe/frappe-bench/sites/
+  echo ""
+  if [ -d "/home/frappe/frappe-bench/sites/'$SITE_NAME'" ]; then
+    echo "✅ Site '\''$SITE_NAME'\'' found in container sites directory"
+    echo "📁 Site directory size:"
+    du -sh /home/frappe/frappe-bench/sites/'$SITE_NAME'
+    echo "📄 Site directory contents:"
+    ls -la /home/frappe/frappe-bench/sites/'$SITE_NAME'/
+  else
+    echo "❌ Site '\''$SITE_NAME'\'' NOT found in container sites directory!"
+    echo "This means the site will not be available to running containers"
+  fi
+'
 
 echo ""
 echo "🎯 Frappe site installation script completed!"
