@@ -8,12 +8,15 @@ set -e
 
 echo "🚀 Starting Frappe site installation..."
 
-# Configuration from environment variables
-SITE_NAME=${FRAPPE_SITE_NAME_HEADER:-"localhost"}
-DB_PASSWORD=${DB_PASSWORD:-"admin"}
-ADMIN_PASSWORD=${ADMIN_PASSWORD:-"admin"}
-DB_HOST=${DB_HOST:-"db"}
-DB_PORT=${DB_PORT:-"3306"}
+# Configuration from environment variables (no defaults - must be provided)
+SITE_NAME=${FRAPPE_SITE_NAME_HEADER}
+DB_PASSWORD=${DB_PASSWORD}
+ADMIN_PASSWORD=${ADMIN_PASSWORD}
+DB_HOST=${DB_HOST}
+DB_PORT=${DB_PORT}
+REDIS_CACHE=${REDIS_CACHE}
+REDIS_QUEUE=${REDIS_QUEUE}
+SOCKETIO_PORT=${SOCKETIO_PORT}
 
 echo "📋 Site Configuration:"
 echo "  - Site Name: $SITE_NAME"
@@ -24,9 +27,15 @@ echo "  - Admin Password: [CONFIGURED]"
 echo "📦 Starting temporary Frappe container for site installation..."
 
 # Run the installation inside a Docker container
-docker compose -f docker-compose.zerops.yaml run --rm -e FRAPPE_SITE_NAME_HEADER="$SITE_NAME" \
-  -e DB_HOST="$DB_HOST" -e DB_PORT="$DB_PORT" -e DB_PASSWORD="$DB_PASSWORD" \
+docker compose -f docker-compose.zerops.yaml run --rm \
+  -e FRAPPE_SITE_NAME_HEADER="$SITE_NAME" \
+  -e DB_HOST="$DB_HOST" \
+  -e DB_PORT="$DB_PORT" \
+  -e DB_PASSWORD="$DB_PASSWORD" \
   -e ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+  -e REDIS_CACHE="$REDIS_CACHE" \
+  -e REDIS_QUEUE="$REDIS_QUEUE" \
+  -e SOCKETIO_PORT="$SOCKETIO_PORT" \
   configurator bash -c '
     echo "🏗️  Setting up Frappe configuration..."
     

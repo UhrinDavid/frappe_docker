@@ -20,9 +20,13 @@ zerops:
   # Frappe/ERPNext Application Services (Docker Compose)
   - setup: erpnext
     build:
-      # Deploy the custom docker-compose file to the runtime
-      deployFiles: ./docker-compose.zerops.yaml
-      addToRunPrepare: ./docker-compose.zerops.yaml
+      # Deploy the custom docker-compose file and scripts to the runtime
+      deployFiles: 
+        - ./docker-compose.zerops.yaml
+        - ./scripts/
+      addToRunPrepare: 
+        - ./docker-compose.zerops.yaml
+        - ./scripts/
     run:
       # Environment variables for Docker Compose services
       envVariables:
