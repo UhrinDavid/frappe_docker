@@ -32,7 +32,13 @@ zerops:
         - sudo apk update
         - sudo apk add --no-cache docker docker-compose
         - sudo rc-update add docker boot
+        # Add current user to docker group for socket access
+        - sudo addgroup $(whoami) docker
         - sudo service docker start || sudo dockerd &
+        # Wait for Docker daemon to be ready
+        - sleep 5
+        # Fix docker socket permissions
+        - sudo chmod 666 /var/run/docker.sock
         # Build and push to Docker Hub
         - docker build -f images/herbatica/erpnext/Containerfile -t davidu98/herbatica-erpnext:${ZEROPS_SUBDOMAIN_PORT} .
         - docker tag davidu98/herbatica-erpnext:${ZEROPS_SUBDOMAIN_PORT} davidu98/herbatica-erpnext:latest
