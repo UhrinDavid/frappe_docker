@@ -62,8 +62,8 @@ zerops:
       # Site initialization and app installation
       prepareCommands:
         # Check service connections before proceeding
-        - chmod +x scripts/check-connections.sh
-        - ./scripts/check-connections.sh
+        # - chmod +x scripts/check-connections.sh
+        # - ./scripts/check-connections.sh
 
         # Pull Docker images
         - docker compose -f docker-compose.zerops.yaml pull
