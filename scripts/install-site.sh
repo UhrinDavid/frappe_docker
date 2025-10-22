@@ -8,6 +8,12 @@ set -e
 
 echo "🚀 Starting Frappe site installation..."
 
+# Ensure shared storage directory exists
+echo "📁 Preparing shared storage..."
+mkdir -p /mnt/sharedstorage/sites
+chmod 755 /mnt/sharedstorage/sites
+echo "✅ Shared storage prepared: /mnt/sharedstorage/sites"
+
 # Configuration from environment variables (no defaults - must be provided)
 SITE_NAME=${FRAPPE_SITE_NAME_HEADER}
 DB_PASSWORD=${DB_PASSWORD}
@@ -182,5 +188,24 @@ echo "🎉 Installation verification completed successfully!"
 echo "✅ Site: $SITE_NAME"
 echo "✅ Apps: frappe, erpnext, erpnext_xml_importer"
 echo "✅ Configuration: accessible"
+echo ""
+
+# Final check: Verify site persists in the shared storage
+echo "4️⃣ Final persistence check..."
+echo "📂 Checking if site data is in shared storage..."
+echo "📁 Shared storage contents:"
+ls -la /mnt/sharedstorage/sites/
+echo ""
+if [ -d "/mnt/sharedstorage/sites/$SITE_NAME" ]; then
+  echo "✅ Site '$SITE_NAME' found in shared storage"
+  echo "📁 Site directory size:"
+  du -sh /mnt/sharedstorage/sites/$SITE_NAME
+  echo "📄 Site directory contents:"
+  ls -la /mnt/sharedstorage/sites/$SITE_NAME/
+else
+  echo "❌ Site '$SITE_NAME' NOT found in shared storage!"
+  echo "This means the site will not be available to running containers"
+fi
+
 echo ""
 echo "🎯 Frappe site installation script completed!"

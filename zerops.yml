@@ -17,6 +17,10 @@ services:
       type: valkey@7.2
       mode: NON_HA  # use HA in production
 
+    - hostname: sharedstorage
+      type: shared-storage
+      mode: NON_HA
+
 zerops:
   # Frappe/ERPNext Application Services (Docker Compose)
   - setup: erpnext
