@@ -34,15 +34,15 @@ zerops:
         RESTART_POLICY: unless-stopped
         
         # Database connection (using Zerops service)
-        DB_HOST: mariadb_hostname
+        DB_HOST: ${mariadb_hostname}
         DB_PORT: 3306
-        ROOT_USER: mariadb_user
-        DB_PASSWORD: mariadb_password
-        
-        # Redis connections (using Zerops Valkey services)  
-        REDIS_CACHE: rediscache:6379
-        REDIS_QUEUE: redisqueue:6379
-        
+        ROOT_USER: ${mariadb_user}
+        DB_PASSWORD: ${mariadb_password}
+
+        # Redis connections (using Zerops Valkey services)
+        REDIS_CACHE: ${rediscache}:6379
+        REDIS_QUEUE: ${redisqueue}:6379
+
         # Site configuration
         FRAPPE_SITE_NAME_HEADER: ${siteName}
         ADMIN_PASSWORD: ${adminPassword}
