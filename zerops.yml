@@ -39,13 +39,14 @@ zerops:
         - sleep 5
         # Fix docker socket permissions
         - sudo chmod 666 /var/run/docker.sock
-        # Build and push to Docker Hub (use timestamp as fallback for tag)
-        - export BUILD_TAG=${ZEROPS_SUBDOMAIN_PORT:-$(date +%Y%m%d-%H%M%S)}
-        - docker build -f images/herbatica/erpnext/Containerfile -t davidu98/herbatica-erpnext:$BUILD_TAG .
-        - docker tag davidu98/herbatica-erpnext:$BUILD_TAG davidu98/herbatica-erpnext:latest
+        # Build and push to Docker Hub using Git commit SHA
+        - export GIT_SHA=$(git rev-parse --short HEAD)
+        - echo "Building with Git SHA: $GIT_SHA"
+        - docker build -f images/herbatica/erpnext/Containerfile -t davidu98/herbatica-erpnext:$GIT_SHA .
+        - docker tag davidu98/herbatica-erpnext:$GIT_SHA davidu98/herbatica-erpnext:latest
         # Login and push to Docker Hub
         - echo $DOCKERHUB_TOKEN | docker login -u davidu98 --password-stdin
-        - docker push davidu98/herbatica-erpnext:$BUILD_TAG
+        - docker push davidu98/herbatica-erpnext:$GIT_SHA
         - docker push davidu98/herbatica-erpnext:latest
       deployFiles: 
         - ./docker-compose.zerops.yaml
