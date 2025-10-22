@@ -25,7 +25,17 @@ zerops:
   # Frappe/ERPNext Application Services (Docker Compose)
   - setup: erpnext
     build:
-      # Deploy the custom docker-compose file and scripts to the runtime
+      # Build custom ERPNext image with XML Importer
+      base: alpine@3.19
+      buildCommands:
+        - apk add --no-cache docker docker-compose
+        # Build and push to Docker Hub
+        - docker build -f images/herbatica/erpnext/Containerfile -t davidu98/herbatica-erpnext:${ZEROPS_SUBDOMAIN_PORT} .
+        - docker tag davidu98/herbatica-erpnext:${ZEROPS_SUBDOMAIN_PORT} davidu98/herbatica-erpnext:latest
+        # Login and push to Docker Hub
+        - echo $DOCKERHUB_TOKEN | docker login -u davidu98 --password-stdin
+        - docker push davidu98/herbatica-erpnext:${ZEROPS_SUBDOMAIN_PORT}
+        - docker push davidu98/herbatica-erpnext:latest
       deployFiles: 
         - ./docker-compose.zerops.yaml
         - ./scripts/
@@ -35,9 +45,12 @@ zerops:
     run:
       # Environment variables for Docker Compose services
       envVariables:
-        # Image configuration
-        CUSTOM_IMAGE: frappe/erpnext
-        CUSTOM_TAG: v15.84.0
+        # Image configuration  
+        CUSTOM_IMAGE: davidu98/herbatica-erpnext
+        CUSTOM_TAG: ${ZEROPS_SUBDOMAIN_PORT}
+        
+        # Docker Hub authentication
+        DOCKERHUB_TOKEN: ${DOCKERHUB_TOKEN}
         ERPNEXT_VERSION: v15.84.0
         PULL_POLICY: always
         RESTART_POLICY: unless-stopped
@@ -65,7 +78,7 @@ zerops:
       
       # Site initialization and app installation
       prepareCommands:
-        # Pull Docker images
+        # Pull all Docker images (including custom image from Docker Hub)
         - docker compose -f docker-compose.zerops.yaml pull
         
         # Step 1: Prepare shared storage

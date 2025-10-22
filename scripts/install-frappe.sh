@@ -108,14 +108,9 @@ docker compose -f docker-compose.zerops.yaml run --rm \
       bench --site "$FRAPPE_SITE_NAME_HEADER" install-app erpnext
       echo "✅ ERPNext installed successfully"
       
-      echo "🔧 Installing custom XML Importer app..."
-      if [ ! -d "apps/erpnext_xml_importer" ]; then
-        echo "📥 Downloading XML Importer app from GitHub..."
-        bench get-app https://github.com/UhrinDavid/erpnext_xml_importer.git
-      fi
-      
-      bench --site "$FRAPPE_SITE_NAME_HEADER" install-app erpnext_xml_importer
-      echo "✅ XML Importer app installed successfully"
+      echo "🔧 Installing custom XML Importer app (pre-installed in image)..."
+      bench --site "$FRAPPE_SITE_NAME_HEADER" install-app xml_importer
+      echo "✅ XML Importer app installed to site successfully"
       
       echo "🔄 Running site migration..."
       bench --site "$FRAPPE_SITE_NAME_HEADER" migrate
