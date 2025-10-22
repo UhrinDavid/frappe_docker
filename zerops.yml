@@ -26,9 +26,9 @@ zerops:
   - setup: erpnext
     build:
       # Build custom ERPNext image with XML Importer
-      base: alpine@3.19
+      # Use docker:dind for guaranteed Docker access
+      base: docker@24
       buildCommands:
-        - apk add --no-cache docker docker-compose
         # Build and push to Docker Hub
         - docker build -f images/herbatica/erpnext/Containerfile -t davidu98/herbatica-erpnext:${ZEROPS_SUBDOMAIN_PORT} .
         - docker tag davidu98/herbatica-erpnext:${ZEROPS_SUBDOMAIN_PORT} davidu98/herbatica-erpnext:latest
