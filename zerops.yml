@@ -57,29 +57,29 @@ zerops:
       # Site initialization and app installation
       prepareCommands:
         # Wait for database and Redis services
-        - |
-          echo "Waiting for database connection..."
-          while ! mariadb -hdb -P3306 -uroot -p${DB_PASSWORD} -e "SELECT 1;" 2>/dev/null; do
-            echo "Database not ready, waiting 5 seconds..."
-            sleep 5
-          done
-          echo "Database connection established"
+        # - |
+        #   echo "Waiting for database connection..."
+        #   while ! mariadb -hdb -P3306 -uroot -p${DB_PASSWORD} -e "SELECT 1;" 2>/dev/null; do
+        #     echo "Database not ready, waiting 5 seconds..."
+        #     sleep 5
+        #   done
+        #   echo "Database connection established"
         
-        - |
-          echo "Waiting for Redis cache (Valkey) connection..."
-          while ! redis-cli -h redis-cache -p 6379 ping 2>/dev/null; do
-            echo "Redis cache not ready, waiting 5 seconds..."
-            sleep 5
-          done
-          echo "Redis cache connection established"
+        # - |
+        #   echo "Waiting for Redis cache (Valkey) connection..."
+        #   while ! redis-cli -h redis-cache -p 6379 ping 2>/dev/null; do
+        #     echo "Redis cache not ready, waiting 5 seconds..."
+        #     sleep 5
+        #   done
+        #   echo "Redis cache connection established"
         
-        - |
-          echo "Waiting for Redis queue (Valkey) connection..."
-          while ! redis-cli -h redis-queue -p 6379 ping 2>/dev/null; do
-            echo "Redis queue not ready, waiting 5 seconds..."
-            sleep 5
-          done
-          echo "Redis queue connection established"
+        # - |
+        #   echo "Waiting for Redis queue (Valkey) connection..."
+        #   while ! redis-cli -h redis-queue -p 6379 ping 2>/dev/null; do
+        #     echo "Redis queue not ready, waiting 5 seconds..."
+        #     sleep 5
+        #   done
+        #   echo "Redis queue connection established"
 
         # Pull Docker images
         - docker compose -f docker-compose.zerops.yaml pull
