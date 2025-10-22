@@ -17,7 +17,10 @@ x-depends-on-configurator: &depends_on_configurator
 x-backend-defaults: &backend_defaults
   <<: [*depends_on_configurator, *customizable_image]
   volumes:
-    - /mnt/sharedstorage/frappe-bench:/home/frappe/frappe-bench
+    # Essential data that must persist
+    - /mnt/sharedstorage/sites:/home/frappe/frappe-bench/sites
+    - /mnt/sharedstorage/apps:/home/frappe/frappe-bench/apps
+    - /mnt/sharedstorage/logs:/home/frappe/frappe-bench/logs
   environment:
     - DB_HOST
     - DB_PORT
@@ -61,8 +64,6 @@ services:
   backend:
     <<: *backend_defaults
     platform: linux/amd64
-    ports:
-      - "8000:8000"
 
   frontend:
     <<: *customizable_image
@@ -79,12 +80,11 @@ services:
       - PROXY_READ_TIMEOUT=120
       - CLIENT_MAX_BODY_SIZE=50m
     volumes:
-      - /mnt/sharedstorage/frappe-bench:/home/frappe/frappe-bench
+      - /mnt/sharedstorage/sites:/home/frappe/frappe-bench/sites
+      - /mnt/sharedstorage/apps:/home/frappe/frappe-bench/apps
     depends_on:
       - backend
       - websocket
-    ports:
-      - "8080:8080"
 
   websocket:
     <<: [*depends_on_configurator, *customizable_image]
@@ -93,9 +93,8 @@ services:
       - node
       - /home/frappe/frappe-bench/apps/frappe/socketio.js
     volumes:
-      - /mnt/sharedstorage/frappe-bench:/home/frappe/frappe-bench
-    ports:
-      - "9000:9000"
+      - /mnt/sharedstorage/sites:/home/frappe/frappe-bench/sites
+      - /mnt/sharedstorage/apps:/home/frappe/frappe-bench/apps
 
   queue-short:
     <<: *backend_defaults
