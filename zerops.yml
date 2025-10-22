@@ -1,24 +1,22 @@
 # Zerops configuration for Frappe/ERPNext deployment
 # Creates managed database services and uses Docker Compose for application containers
 
+services:
+    - hostname: mariadb
+      # service type and version number in mariadb@{version} format
+      type: mariadb@10.6
+      # mode of operation "HA"/"NON_HA",
+      mode: NON_HA
+
+    - hostname: rediscache
+      type: valkey@7.2
+      mode: NON_HA  # use HA in production
+    
+    - hostname: redisqueue
+      type: valkey@7.2
+      mode: NON_HA  # use HA in production
+
 zerops:
-  # Deploy DB and redis manually.
-  # MariaDB Database Service
-  # - setup: db
-  #   base: mariadb@11
-  #   envSecrets:
-  #     MARIADB_ROOT_PASSWORD: ${dbPassword}
-
-  # # Redis Cache Service (using Valkey - Redis compatible)
-  # - setup: redis-cache
-  #   base: valkey@7.2
-  #   mode: NON_HA  # Use HA in production
-
-  # # Redis Queue Service (using Valkey - Redis compatible)  
-  # - setup: redis-queue
-  #   base: valkey@7.2
-  #   mode: NON_HA  # Use HA in production
-
   # Frappe/ERPNext Application Services (Docker Compose)
   - setup: erpnext
     build:
@@ -36,9 +34,10 @@ zerops:
         RESTART_POLICY: unless-stopped
         
         # Database connection (using Zerops service)
-        DB_HOST: db
+        DB_HOST: mariadb_hostname
         DB_PORT: 3306
-        DB_PASSWORD: ${dbPassword}
+        ROOT_USER: mariadb_user
+        DB_PASSWORD: mariadb_password
         
         # Redis connections (using Zerops Valkey services)  
         REDIS_CACHE: rediscache:6379
