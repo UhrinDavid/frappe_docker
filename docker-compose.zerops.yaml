@@ -37,15 +37,16 @@ services:
       - -c
     # Basic Frappe configuration only (site installation handled by Zerops)
     command:
-      - >
-        ls -1 apps > sites/apps.txt;
-        bench set-config -g db_host $$DB_HOST;
-        bench set-config -gp db_port $$DB_PORT;
-        bench set-config -g redis_cache "redis://$$REDIS_CACHE";
-        bench set-config -g redis_queue "redis://$$REDIS_QUEUE";
-        bench set-config -g redis_socketio "redis://$$REDIS_QUEUE";
-        bench set-config -gp socketio_port $$SOCKETIO_PORT;
-        echo "✅ Frappe configuration completed";
+      - |
+        # Configure Frappe settings
+        bench set-config -g db_host $$DB_HOST
+        bench set-config -gp db_port $$DB_PORT
+        bench set-config -g redis_cache "redis://$$REDIS_CACHE"
+        bench set-config -g redis_queue "redis://$$REDIS_QUEUE"
+        bench set-config -g redis_socketio "redis://$$REDIS_QUEUE"
+        bench set-config -gp socketio_port $$SOCKETIO_PORT
+        
+        echo "✅ Frappe configuration completed"
     environment:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT:-3306}
@@ -57,6 +58,8 @@ services:
       FRAPPE_SITE_NAME_HEADER: ${FRAPPE_SITE_NAME_HEADER}
     depends_on: {}
     restart: on-failure
+    volumes:
+      - /mnt/sharedstorage/sites:/home/frappe/frappe-bench/sites
 
   backend:
     <<: *backend_defaults
