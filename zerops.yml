@@ -90,8 +90,10 @@ zerops:
       
       # Site initialization and app installation
       prepareCommands:
-        # Pull all Docker images (including custom image from Docker Hub)
-        - docker compose -f docker-compose.zerops.yaml pull
+        # Login to Docker Hub and pull private custom image
+        - echo $DOCKERHUB_TOKEN | docker login -u davidu98 --password-stdin
+        
+        - docker pull davidu98/herbatica-erpnext:latest
         
         # Step 1: Prepare shared storage
         - |
