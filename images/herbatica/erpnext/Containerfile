@@ -13,7 +13,7 @@ WORKDIR /home/frappe/frappe-bench
 RUN bench get-app xml_importer https://github.com/UhrinDavid/erpnext_xml_importer.git
 
 # Build assets for all apps including the new custom app
-RUN bench build --app frappe --app erpnext --app xml_importer
+# RUN bench build --app frappe --app erpnext --app xml_importer
 
 # Switch back to root for any final configurations
 USER root
