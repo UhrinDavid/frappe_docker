@@ -55,7 +55,7 @@ echo ""
 
 # Use docker compose run to create new container instances
 docker compose --project-name herbatica-erpnext -f docker-compose.zerops.yaml run --rm backend \
-  bench new-site --mariadb-user-host-login-scope=% --db-root-password "$DB_PASSWORD" --install-app erpnext --install-app xml_importer --admin-password "$ADMIN_PASSWORD" "$SITE_NAME"
+  bench new-site --mariadb-user-host-login-scope=% --db-root-username "$DB_ROOT_USERNAME" --db-root-password "$DB_PASSWORD" --install-app erpnext --install-app xml_importer --admin-password "$ADMIN_PASSWORD" "$SITE_NAME"
 
 else
     echo "❌ Site creation failed!"
