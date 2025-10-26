@@ -15,6 +15,7 @@ services:
     
     - hostname: redisqueue
       type: valkey@7.2
+
       mode: NON_HA  # use HA in production
 
     - hostname: sharedstorage
@@ -96,28 +97,28 @@ zerops:
         - docker pull davidu98/herbatica-erpnext:latest
         
         # Step 1: Prepare shared storage
-        # - |
-        #   echo "📁 STEP 1: Shared Storage Preparation"
-        #   chmod +x scripts/prepare-storage.sh
-        #   ./scripts/prepare-storage.sh
+        - |
+          echo "📁 STEP 1: Shared Storage Preparation"
+          chmod +x scripts/prepare-storage.sh
+          ./scripts/prepare-storage.sh
         
-        # # Step 2: Check service connections
-        # - |
-        #   echo "🔍 STEP 2: Service Connection Validation"
-        #   chmod +x scripts/check-services.sh
-        #   ./scripts/check-services.sh
+        # Step 2: Check service connections
+        - |
+          echo "🔍 STEP 2: Service Connection Validation"
+          chmod +x scripts/check-services.sh
+          ./scripts/check-services.sh
         
-        # # Step 3: Install Frappe site and apps (idempotent)
-        # - |
-        #   echo "🏗️ STEP 3: Frappe Site Installation (idempotent)"
-        #   chmod +x scripts/install-frappe.sh
-        #   ./scripts/install-frappe.sh
+        # Step 3: Install Frappe site and apps (idempotent)
+        - |
+          echo "🏗️ STEP 3: Frappe Site Installation (idempotent)"
+          chmod +x scripts/install-frappe.sh
+          ./scripts/install-frappe.sh
         
-        # # Step 4: Post-installation verification
-        # - |
-        #   echo "✅ STEP 4: Post-Installation Verification"
-        #   chmod +x scripts/post-install-check.sh
-        #   ./scripts/post-install-check.sh
+        # Step 4: Post-installation verification
+        - |
+          echo "✅ STEP 4: Post-Installation Verification"
+          chmod +x scripts/post-install-check.sh
+          ./scripts/post-install-check.sh
 
       # Expose HTTP port
       ports:
