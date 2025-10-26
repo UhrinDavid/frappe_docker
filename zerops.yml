@@ -46,10 +46,10 @@ zerops:
           docker push davidu98/herbatica-erpnext:latest
       deployFiles: 
         - ./docker-compose.zerops.yaml
-        - ./scripts/
+        # - ./scripts/
       addToRunPrepare: 
         - ./docker-compose.zerops.yaml
-        - ./scripts/
+        # - ./scripts/
     run:
       # Environment variables for Docker Compose services
       envVariables:
@@ -89,8 +89,8 @@ zerops:
         # Pull the custom Docker image
         - docker pull davidu98/herbatica-erpnext:latest
         # Make installation script executable and run it
-        - chmod +x scripts/install-frappe.sh
-        - ./scripts/install-frappe.sh
+        # - chmod +x scripts/install-frappe.sh
+        # - ./scripts/install-frappe.sh
 
       # Expose HTTP port
       ports:
@@ -98,12 +98,12 @@ zerops:
           httpSupport: true
 
       # Start the application stack 
-      start: |
-        echo "🚀 Starting Frappe/ERPNext services..."
-        echo "====================================="
+      # start: |
+      #   # echo "🚀 Starting Frappe/ERPNext services..."
+      #   # echo "====================================="
         
-        # Start Docker Compose services in foreground
-        docker compose -f docker-compose.zerops.yaml up
+      #   # # Start Docker Compose services in foreground
+      #   docker compose -f docker-compose.zerops.yaml up
 
 # Installation Process (Inline Commands):
 # Prepare Phase:
