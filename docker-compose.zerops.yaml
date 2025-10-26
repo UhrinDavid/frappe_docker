@@ -103,7 +103,7 @@ services:
       - node
       - /home/frappe/frappe-bench/apps/frappe/socketio.js
     volumes:
-      - /mnt/sharedstorage/sites:/home/frappe/frappe-bench/sites
+      - sites:/home/frappe/frappe-bench/sites
 
   queue-short:
     <<: *backend_defaults
