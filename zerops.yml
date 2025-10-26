@@ -98,7 +98,7 @@ zerops:
           httpSupport: true
 
       # Start the application stack 
-      start: docker compose -f docker-compose.zerops.yaml up
+      start: docker compose -f docker-compose.zerops.yaml up --force-recreate
 
 # Installation Process (Inline Commands):
 # Prepare Phase:
