@@ -45,7 +45,7 @@ services:
         
         # Create apps.txt from available apps
         echo "📝 Creating apps.txt..."
-        ls -1 apps | grep -v __pycache__ | sort > sites/apps.txt
+        ls -1 apps > sites/apps.txt
         echo "✅ Created apps.txt with:"
         cat sites/apps.txt
         

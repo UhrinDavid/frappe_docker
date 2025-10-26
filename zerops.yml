@@ -99,10 +99,10 @@ zerops:
 
       # Start the application stack 
       start: |
-      #   # echo "🚀 Starting Frappe/ERPNext services..."
-      #   # echo "====================================="
+        echo "🚀 Starting Frappe/ERPNext services..."
+        echo "====================================="
         
-      #   # # Start Docker Compose services in foreground
+        # Start Docker Compose services in foreground
         docker compose -f docker-compose.zerops.yaml up
 
 # Installation Process (Inline Commands):
