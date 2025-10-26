@@ -22,6 +22,7 @@ x-backend-defaults: &backend_defaults
     - DB_HOST
     - DB_PORT
     - DB_PASSWORD
+    - DB_ROOT_USERNAME
     - ADMIN_PASSWORD
     - REDIS_CACHE
     - REDIS_QUEUE
