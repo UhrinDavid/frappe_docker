@@ -98,12 +98,12 @@ zerops:
           httpSupport: true
 
       # Start the application stack 
-      # start: |
+      start: |
       #   # echo "🚀 Starting Frappe/ERPNext services..."
       #   # echo "====================================="
         
       #   # # Start Docker Compose services in foreground
-      #   docker compose -f docker-compose.zerops.yaml up
+        docker compose -f docker-compose.zerops.yaml up
 
 # Installation Process (Inline Commands):
 # Prepare Phase:
