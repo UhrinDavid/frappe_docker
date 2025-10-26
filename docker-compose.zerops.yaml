@@ -41,27 +41,19 @@ services:
         echo "⚙️ Starting Frappe configuration..."
         echo "===================================="
         
-        # Navigate to bench directory
-        cd /home/frappe/frappe-bench
-        
-        # Ensure sites directory structure exists
-        mkdir -p sites
-        chown -R frappe:frappe sites
-        
         # Create or update apps.txt with apps available in this container
         echo "📝 Creating apps.txt from available apps..."
-        ls -1 apps | grep -v "__pycache__" > sites/apps.txt
+        ls -1 apps > /home/frappe/frappe-bench/sites/apps.txt
         echo "✅ Created apps.txt with:"
-        cat sites/apps.txt | sed 's/^/  - /'
-        chown frappe:frappe sites/apps.txt
+        cat /home/frappe/frappe-bench/sites/apps.txt
         
         # Configure Frappe settings
         echo "⚙️ Configuring Frappe settings..."
         bench set-config -g db_host $$DB_HOST
         bench set-config -gp db_port $$DB_PORT
-        bench set-config -g redis_cache "redis://$$REDIS_CACHE"
-        bench set-config -g redis_queue "redis://$$REDIS_QUEUE"
-        bench set-config -g redis_socketio "redis://$$REDIS_QUEUE"
+        bench set-config -g redis_cache $$REDIS_CACHE
+        bench set-config -g redis_queue $$REDIS_QUEUE
+        bench set-config -g redis_socketio $$REDIS_QUEUE
         bench set-config -gp socketio_port $$SOCKETIO_PORT
         
         echo "✅ Frappe configuration completed"
