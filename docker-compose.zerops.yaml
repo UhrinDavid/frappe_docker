@@ -17,7 +17,7 @@ x-depends-on-configurator: &depends_on_configurator
 x-backend-defaults: &backend_defaults
   <<: [*depends_on_configurator, *customizable_image]
   volumes:
-    - /mnt/sharedstorage/sites:/home/frappe/frappe-bench/sites
+    - sites:/home/frappe/frappe-bench/sites
   environment:
     - DB_HOST
     - DB_PORT
@@ -35,28 +35,30 @@ services:
     entrypoint:
       - bash
       - -c
-    # Basic Frappe configuration only (site installation handled by backend)
     command:
       - |
-        echo "⚙️ Starting Frappe configuration..."
-        echo "===================================="
+        echo "⚙️ Starting Frappe configuration with Docker volumes..."
+        echo "====================================================="
         
-        # Create or update apps.txt with apps available in this container
-        echo "📝 Creating apps.txt from available apps..."
-        ls -1 apps > /home/frappe/frappe-bench/sites/apps.txt
+        # Navigate to bench directory
+        cd /home/frappe/frappe-bench
+        
+        # Create apps.txt from available apps
+        echo "📝 Creating apps.txt..."
+        ls -1 apps | grep -v __pycache__ | sort > sites/apps.txt
         echo "✅ Created apps.txt with:"
-        cat /home/frappe/frappe-bench/sites/apps.txt
+        cat sites/apps.txt
         
-        # Configure Frappe settings
+        # Configure Frappe settings using bench commands
         echo "⚙️ Configuring Frappe settings..."
-        bench set-config -g db_host $$DB_HOST
-        bench set-config -gp db_port $$DB_PORT
-        bench set-config -g redis_cache $$REDIS_CACHE
-        bench set-config -g redis_queue $$REDIS_QUEUE
-        bench set-config -g redis_socketio $$REDIS_QUEUE
-        bench set-config -gp socketio_port $$SOCKETIO_PORT
+        bench set-config -g db_host "$$DB_HOST"
+        bench set-config -gp db_port "$$DB_PORT"
+        bench set-config -g redis_cache "$$REDIS_CACHE"
+        bench set-config -g redis_queue "$$REDIS_QUEUE"
+        bench set-config -g redis_socketio "$$REDIS_QUEUE"
+        bench set-config -gp socketio_port "$$SOCKETIO_PORT"
         
-        echo "✅ Frappe configuration completed"
+        echo "✅ Configuration completed with Docker volumes"
     environment:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT:-3306}
@@ -89,7 +91,7 @@ services:
       - PROXY_READ_TIMEOUT=120
       - CLIENT_MAX_BODY_SIZE=50m
     volumes:
-      - /mnt/sharedstorage/sites:/home/frappe/frappe-bench/sites
+      - sites:/home/frappe/frappe-bench/sites
     depends_on:
       - backend
       - websocket
@@ -117,3 +119,7 @@ services:
     <<: *backend_defaults
     platform: linux/amd64
     command: bench schedule
+
+# Docker named volumes for data persistence
+volumes:
+  sites:
