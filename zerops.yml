@@ -89,44 +89,48 @@ zerops:
         PROXY_READ_TIMEOUT: 120
         CLIENT_MAX_BODY_SIZE: 50m
       
-      # Site initialization and app installation
+      # Basic preparation (no site installation during build)
       prepareCommands:
-        # Login to Docker Hub and pull private custom image
-        # - echo $DOCKERHUB_TOKEN | docker login -u davidu98 --password-stdin
-
+        # Pull the custom Docker image
         - docker pull davidu98/herbatica-erpnext:latest
         
-        # Step 1: Prepare shared storage
-        - |
-          echo "📁 STEP 1: Shared Storage Preparation"
-          chmod +x scripts/prepare-storage.sh
-          ./scripts/prepare-storage.sh
-        
-        # Step 2: Check service connections
-        - |
-          echo "🔍 STEP 2: Service Connection Validation"
-          chmod +x scripts/check-services.sh
-          ./scripts/check-services.sh
-        
-        # Step 3: Install Frappe site and apps (idempotent)
-        - |
-          echo "🏗️ STEP 3: Frappe Site Installation (idempotent)"
-          chmod +x scripts/install-frappe.sh
-          ./scripts/install-frappe.sh
-        
-        # Step 4: Post-installation verification
-        - |
-          echo "✅ STEP 4: Post-Installation Verification"
-          chmod +x scripts/post-install-check.sh
-          ./scripts/post-install-check.sh
 
       # Expose HTTP port
       ports:
         - port: 8080
           httpSupport: true
 
-      # Start the application stack
-      start: docker compose -f docker-compose.zerops.yaml up --force-recreate
+      # Start the application stack with site installation
+      start: |
+        echo "🚀 Starting Frappe/ERPNext with automated site installation..."
+        echo "================================================================="
+        
+        # Start Docker Compose services in background
+        docker compose -f docker-compose.zerops.yaml up -d
+        
+        # Wait for services to be ready
+        echo "⏳ Waiting for services to start..."
+        sleep 10
+        
+        # Step 2: Check service connections 
+        echo "🔍 STEP 2: Service Connection Validation"
+        chmod +x scripts/check-services.sh
+        ./scripts/check-services.sh
+        
+        # Step 3: Install Frappe site and apps (idempotent)
+        echo "🏗️ STEP 3: Frappe Site Installation (idempotent)" 
+        chmod +x scripts/install-frappe.sh
+        ./scripts/install-frappe.sh
+        
+        # Step 4: Post-installation verification
+        echo "✅ STEP 4: Post-Installation Verification"
+        chmod +x scripts/post-install-check.sh
+        ./scripts/post-install-check.sh
+        
+        echo "🎉 Frappe/ERPNext deployment completed successfully!"
+        
+        # Keep containers running in foreground
+        docker compose -f docker-compose.zerops.yaml logs -f
 
 # Installation Process (Modular Scripts):
 # 1. prepare-storage.sh - Sets up shared storage with proper permissions
