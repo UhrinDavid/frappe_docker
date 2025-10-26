@@ -66,7 +66,7 @@ zerops:
         # Database connection (using Zerops service)
         DB_HOST: ${mariadb_hostname}
         DB_PORT: 3306
-        ROOT_USER: ${mariadb_user}
+        DB_ROOT_USERNAME: ${mariadb_user}
         DB_PASSWORD: ${mariadb_password}
 
         # Redis connection (using Zerops services) 

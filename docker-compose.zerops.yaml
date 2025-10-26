@@ -53,6 +53,7 @@ services:
         echo "⚙️ Configuring Frappe settings..."
         bench set-config -g db_host "$$DB_HOST"
         bench set-config -gp db_port "$$DB_PORT"
+        bench set-config -g db_root_username "$$DB_ROOT_USERNAME"
         bench set-config -g redis_cache "$$REDIS_CACHE"
         bench set-config -g redis_queue "$$REDIS_QUEUE"
         bench set-config -g redis_socketio "$$REDIS_QUEUE"
@@ -63,6 +64,7 @@ services:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT:-3306}
       DB_PASSWORD: ${DB_PASSWORD}
+      DB_ROOT_USERNAME: ${DB_ROOT_USERNAME}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       REDIS_CACHE: ${REDIS_CACHE}
       REDIS_QUEUE: ${REDIS_QUEUE}
