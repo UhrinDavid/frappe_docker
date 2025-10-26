@@ -51,8 +51,10 @@ zerops:
           docker push davidu98/herbatica-erpnext:latest
       deployFiles: 
         - ./docker-compose.zerops.yaml
+        - ./scripts/
       addToRunPrepare: 
         - ./docker-compose.zerops.yaml
+        - ./scripts/
     run:
       # Environment variables for Docker Compose services
       envVariables:
