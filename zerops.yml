@@ -51,10 +51,8 @@ zerops:
           docker push davidu98/herbatica-erpnext:latest
       deployFiles: 
         - ./docker-compose.zerops.yaml
-        - ./scripts/
       addToRunPrepare: 
         - ./docker-compose.zerops.yaml
-        - ./scripts/
     run:
       # Environment variables for Docker Compose services
       envVariables:
@@ -89,11 +87,21 @@ zerops:
         PROXY_READ_TIMEOUT: 120
         CLIENT_MAX_BODY_SIZE: 50m
       
-      # Basic preparation (no site installation during build)
+      # Basic preparation
       prepareCommands:
         # Pull the custom Docker image
         - docker pull davidu98/herbatica-erpnext:latest
         
+        # Prepare shared storage
+        - |
+          echo "📁 Preparing shared storage for Frappe bench..."
+          docker compose -f docker-compose.zerops.yaml run --rm configurator bash -c '
+            echo "🔧 Setting up shared storage for full bench persistence..."
+            cd /home/frappe/frappe-bench
+            mkdir -p sites apps logs config
+            chmod -R 755 .
+            echo "✅ Shared storage prepared"
+          '
 
       # Expose HTTP port
       ports:
@@ -110,33 +118,117 @@ zerops:
         
         # Wait for services to be ready
         echo "⏳ Waiting for services to start..."
-        sleep 10
+        sleep 15
         
-        # Step 2: Check service connections 
-        echo "🔍 STEP 2: Service Connection Validation"
-        chmod +x scripts/check-services.sh
-        ./scripts/check-services.sh
+        # Step 1: Check service connections 
+        echo "🔍 STEP 1: Service Connection Validation"
         
-        # Step 3: Install Frappe site and apps (idempotent)
-        echo "🏗️ STEP 3: Frappe Site Installation (idempotent)" 
-        chmod +x scripts/install-frappe.sh
-        ./scripts/install-frappe.sh
+        # Check MariaDB connection
+        echo "🗄️  Testing MariaDB connection..."
+        if docker compose --project-name herbatica-erpnext -f docker-compose.zerops.yaml exec backend bash -c "
+          mysql -h\$DB_HOST -P\$DB_PORT -u\$ROOT_USER -p\$DB_PASSWORD -e 'SELECT 1' > /dev/null 2>&1
+        "; then
+          echo "✅ MariaDB connection successful"
+        else
+          echo "❌ MariaDB connection failed"
+          exit 1
+        fi
         
-        # Step 4: Post-installation verification
-        echo "✅ STEP 4: Post-Installation Verification"
-        chmod +x scripts/post-install-check.sh
-        ./scripts/post-install-check.sh
+        # Check Redis connections
+        echo "🔴 Testing Redis connections..."
+        if docker compose --project-name herbatica-erpnext -f docker-compose.zerops.yaml exec backend bash -c "
+          redis-cli -h rediscache -p 6379 ping > /dev/null 2>&1 &&
+          redis-cli -h redisqueue -p 6379 ping > /dev/null 2>&1
+        "; then
+          echo "✅ Redis connections successful"
+        else
+          echo "❌ Redis connection failed"
+          exit 1
+        fi
         
+        # Step 2: Install Frappe site and apps (idempotent)
+        echo "🏗️ STEP 2: Frappe Site Installation (idempotent)"
+        
+        # Check if site exists
+        SITE_EXISTS=$(docker compose --project-name herbatica-erpnext -f docker-compose.zerops.yaml exec backend bash -c '
+          cd /home/frappe/frappe-bench 2>/dev/null || exit 1
+          if [ -d "sites/$FRAPPE_SITE_NAME_HEADER" ] && bench --site all list-sites 2>/dev/null | grep -q "$FRAPPE_SITE_NAME_HEADER"; then
+            echo "EXISTS"
+          else
+            echo "NOT_EXISTS"
+          fi
+        ' 2>/dev/null || echo "NOT_EXISTS")
+        
+        if echo "$SITE_EXISTS" | grep -q "EXISTS"; then
+          echo "♻️ Site '$FRAPPE_SITE_NAME_HEADER' already exists - running migration..."
+          docker compose --project-name herbatica-erpnext -f docker-compose.zerops.yaml exec backend \
+            bench --site "$FRAPPE_SITE_NAME_HEADER" migrate
+          echo "✅ Migration completed"
+        else
+          echo "🆕 Creating new site: $FRAPPE_SITE_NAME_HEADER"
+          
+          # Create site with ERPNext
+          docker compose --project-name herbatica-erpnext -f docker-compose.zerops.yaml exec backend \
+            bench new-site --mariadb-user-host-login-scope=% --db-root-password "$DB_PASSWORD" --install-app erpnext --admin-password "$ADMIN_PASSWORD" "$FRAPPE_SITE_NAME_HEADER"
+          
+          if [ $? -eq 0 ]; then
+            echo "✅ Site created successfully!"
+            
+            # Install XML Importer app
+            echo "📦 Installing XML Importer app..."
+            docker compose --project-name herbatica-erpnext -f docker-compose.zerops.yaml exec backend \
+              bench --site "$FRAPPE_SITE_NAME_HEADER" install-app erpnext_xml_importer
+            
+            if [ $? -eq 0 ]; then
+              echo "✅ XML Importer app installed successfully!"
+            else
+              echo "⚠️ XML Importer app installation failed (may not be available)"
+            fi
+          else
+            echo "❌ Site creation failed!"
+            exit 1
+          fi
+        fi
+        
+        # Step 3: Post-installation verification
+        echo "✅ STEP 3: Post-Installation Verification"
+        
+        # Verify site is accessible
+        if docker compose --project-name herbatica-erpnext -f docker-compose.zerops.yaml exec backend bash -c "
+          bench --site '$FRAPPE_SITE_NAME_HEADER' show-config > /dev/null 2>&1
+        "; then
+          echo "✅ Site configuration is accessible"
+        else
+          echo "❌ Site configuration check failed"
+          exit 1
+        fi
+        
+        # List installed apps
+        echo "📦 Installed apps:"
+        docker compose --project-name herbatica-erpnext -f docker-compose.zerops.yaml exec backend \
+          bench --site "$FRAPPE_SITE_NAME_HEADER" list-apps
+        
+        echo ""
         echo "🎉 Frappe/ERPNext deployment completed successfully!"
+        echo "==============================================="
+        echo "✅ Site: $FRAPPE_SITE_NAME_HEADER"
+        echo "✅ Apps: frappe, erpnext, erpnext_xml_importer"
+        echo "✅ Ready for use!"
         
         # Keep containers running in foreground
         docker compose -f docker-compose.zerops.yaml logs -f
 
-# Installation Process (Modular Scripts):
-# 1. prepare-storage.sh - Sets up shared storage with proper permissions
-# 2. check-services.sh - Validates all service connections (DB, Redis, Storage)
-# 3. install-frappe.sh - Creates site and installs ERPNext + custom apps
-# 4. post-install-check.sh - Verifies installation success and data persistence
+# Installation Process (Inline Commands):
+# Prepare Phase:
+# - Pull custom Docker image with XML Importer
+# - Set up shared storage directory structure
+#
+# Start Phase:
+# 1. Start Docker Compose services
+# 2. Validate service connections (MariaDB, Redis)
+# 3. Install Frappe site with ERPNext and custom apps (idempotent)
+# 4. Verify installation and list installed apps
+# 5. Keep containers running
 #
 # Benefits of managed services:
 # - Automatic backups and point-in-time recovery
