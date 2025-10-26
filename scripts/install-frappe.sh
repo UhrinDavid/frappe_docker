@@ -11,6 +11,7 @@ echo "============================================"
 # Configuration from environment variables
 SITE_NAME=${FRAPPE_SITE_NAME_HEADER}
 DB_PASSWORD=${DB_PASSWORD}
+DB_ROOT_USERNAME=${DB_ROOT_USERNAME}
 ADMIN_PASSWORD=${ADMIN_PASSWORD}
 
 if [ -z "$SITE_NAME" ] || [ -z "$DB_PASSWORD" ] || [ -z "$ADMIN_PASSWORD" ]; then
@@ -57,10 +58,6 @@ echo ""
 docker compose --project-name herbatica-erpnext -f docker-compose.zerops.yaml run --rm backend \
   bench new-site --mariadb-user-host-login-scope=% --db-root-username "$DB_ROOT_USERNAME" --db-root-password "$DB_PASSWORD" --install-app erpnext --install-app xml_importer --admin-password "$ADMIN_PASSWORD" "$SITE_NAME"
 
-else
-    echo "❌ Site creation failed!"
-    exit 1
-fi
 
 echo ""
 echo "🎉 Frappe site installation completed successfully!"
