@@ -17,6 +17,12 @@ services:
       type: valkey@7.2
       mode: NON_HA  # use HA in production
 
+    #  for db management
+    - hostname: adminer
+      type: php-apache@8.3
+      enableSubdomainAccess: true
+      buildFromGit: https://github.com/zeropsio/recipe-adminer
+
 zerops:
   # Frappe/ERPNext Application Services (Docker Compose)
   - setup: erpnext
