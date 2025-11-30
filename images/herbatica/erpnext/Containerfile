@@ -1,7 +1,7 @@
 # Custom ERPNext image with XML Importer app
 # Based on official ERPNext image with additional custom apps
 
-FROM frappe/erpnext:v15.84.0
+FROM frappe/erpnext:v16
 
 # Switch to frappe user for app installation
 USER frappe
@@ -11,13 +11,6 @@ WORKDIR /home/frappe/frappe-bench
 
 # Install XML Importer app from your GitHub repository
 RUN bench get-app xml_importer https://github.com/UhrinDavid/erpnext_xml_importer.git
-
-RUN bench get-app https://github.com/frappe/erpnext-shipping.git --branch version-15
-
-RUN bench get-app print_designer
-
-# Build assets for all apps including the new custom app
-# RUN bench build --app frappe --app erpnext --app xml_importer
 
 # Switch back to root for any final configurations
 USER root
