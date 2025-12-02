@@ -12,6 +12,9 @@ WORKDIR /home/frappe/frappe-bench
 # Install XML Importer app from your GitHub repository
 RUN bench get-app xml_importer https://github.com/UhrinDavid/erpnext_xml_importer.git
 
+# Install Raven app from The-Commit-Company repository
+RUN bench get-app https://github.com/The-Commit-Company/Raven.git
+
 # Switch back to root for any final configurations
 USER root
 
