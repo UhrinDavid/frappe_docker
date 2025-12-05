@@ -21,6 +21,8 @@ RUN bench get-app https://github.com/The-Commit-Company/Raven.git
 RUN bench pip install minio
 RUN bench get-app https://github.com/developmentforpeople/dfp_external_storage.git
 
+RUN bench get-app https://github.com/Mohtashim-1/Invoice-OCR.git
+
 # Switch back to root for any final configurations
 USER root
 
