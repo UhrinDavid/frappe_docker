@@ -1,7 +1,7 @@
 # Custom ERPNext image with XML Importer app
 # Based on official ERPNext image with additional custom apps
 
-FROM frappe/erpnext:v15.91.0
+FROM frappe/erpnext:develop
 
 # Switch to frappe user for app installation
 USER frappe
