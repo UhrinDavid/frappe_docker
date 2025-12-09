@@ -15,7 +15,7 @@ RUN bench get-app xml_importer https://github.com/UhrinDavid/erpnext_xml_importe
 RUN bench get-app https://github.com/UhrinDavid/barcode_to_item_id.git --branch develop
 
 # Install Raven app from The-Commit-Company repository
-RUN bench get-app https://github.com/The-Commit-Company/Raven.git
+RUN bench get-app --branch main https://github.com/The-Commit-Company/Raven.git
 
 # Install custom apps
 RUN bench get-app https://github.com/developmentforpeople/dfp_external_storage.git
