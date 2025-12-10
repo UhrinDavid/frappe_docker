@@ -28,6 +28,7 @@ x-backend-defaults: &backend_defaults
     - REDIS_QUEUE
     - SOCKETIO_PORT
     - FRAPPE_SITE_NAME_HEADER
+    - FRAPPE_ENCRYPTION_KEY
 
 services:
   configurator:

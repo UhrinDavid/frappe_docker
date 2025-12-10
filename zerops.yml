@@ -82,6 +82,7 @@ zerops:
         # Site configuration
         FRAPPE_SITE_NAME_HEADER: ${siteName}
         ADMIN_PASSWORD: ${adminPassword}
+        FRAPPE_ENCRYPTION_KEY: ${FRAPPE_ENCRYPTION_KEY}
 
         # Nginx/Proxy settings
         UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
